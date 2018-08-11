@@ -1,0 +1,367 @@
+#!/usr/bin/env node
+
+/**
+ * Module dependencies.
+ */
+
+ const app = require('../app');
+ const debug = require('debug')('opsniper:server');
+ const https = require('https');
+ const http = require('http');
+ const fs = require('fs');
+ const mysql = require('mysql');
+ const $ = require('jquery');
+ const sniper = require('OPSniperV2.js');
+
+
+
+var port = normalizePort(process.env.PORT || '443');
+app.set('port', port);
+
+var server = https.createServer({
+   key: fs.readFileSync('opsniper.trade.key', 'utf8'),
+   cert: fs.readFileSync('opsniper_trade.crt', 'utf8')
+ }, app).listen(port);
+
+
+http.createServer(function (req, res) {
+  res.writeHead(301, {"Location": "https://" + req.headers['host'] + req.url });
+  res.end();
+}, app).listen(80);
+
+var io = require('socket.io')(server);
+
+/*
+ * Connect to MySQL database
+*/
+
+var pool = mysql.createPool({
+    connectionLimit : 100,
+    host: 'opsniper.trade',
+    user: 'root',
+    password: 'MYSQL_PASSWORD',
+    database: 'opsniper',
+    multipleStatements: true
+});
+
+/**
+ * Listen on provided port, on all network interfaces.
+ */
+
+server.listen(port);
+server.on('error', onError);
+server.on('listening', onListening);
+
+/**
+ * Normalize a port into a number, string, or false.
+ */
+
+function normalizePort(val) {
+  var port = parseInt(val, 10);
+
+  if (isNaN(port)) {
+    // named pipe
+    return val;
+  }
+
+  if (port >= 0) {
+    // port number
+    return port;
+  }
+
+  return false;
+}
+
+/**
+ * Event listener for HTTP server "error" event.
+ */
+
+function onError(error) {
+  if (error.syscall !== 'listen') {
+    throw error;
+  }
+
+  var bind = typeof port === 'string'
+    ? 'Pipe ' + port
+    : 'Port ' + port;
+
+  // handle specific listen errors with friendly messages
+  switch (error.code) {
+    case 'EACCES':
+      console.error(bind + ' requires elevated privileges');
+      process.exit(1);
+      break;
+    case 'EADDRINUSE':
+      console.error(bind + ' is already in use');
+      process.exit(1);
+      break;
+    default:
+      throw error;
+  }
+}
+
+/**
+ * Event listener for HTTP server "listening" event.
+ */
+
+function onListening() {
+  var addr = server.address();
+  var bind = typeof addr === 'string'
+    ? 'pipe ' + addr
+    : 'port ' + addr.port;
+  debug('Listening on ' + bind);
+}
+
+// Socket.io
+
+var usersOnline = 0;
+
+io.on('connection', function(client) {
+
+  console.log(client.request.headers.cookie);
+
+  console.log("Client Connected!");
+  usersOnline = usersOnline + 1;
+  io.emit('usersonline', usersOnline);
+  console.log(usersOnline);
+
+  client.on('disconnect', function() {
+    console.log("User Disconnected From Server!");
+    usersOnline = usersOnline - 1;
+    io.emit('usersonline', usersOnline);
+    console.log(usersOnline);
+  });
+
+  (function previous() {
+    pool.query("SELECT * FROM PrimarySnipes ORDER BY id DESC LIMIT 25",
+    function(err, result) {
+      resul = JSON.parse(JSON.stringify(result));
+      client.emit('prevdata', resul);
+    });
+  })();
+
+  client.on('userpurchase', function(data) {
+    console.log(data);
+    var buydata = data;
+    console.log(buydata);
+    pool.query("SELECT skin, wear, pattern, tier, listprice, sugprice, listing, inspect, sniper FROM PrimarySnipes WHERE listing='" + buydata.link + "'",
+    function(err, result) {
+      if (result.length > 0) {
+        if (err) throw err;
+        var userpurchase = JSON.parse(JSON.stringify(result));
+        userpurchase[0].user = buydata.user;
+        console.log(userpurchase);
+        pool.query("SELECT * FROM UserPurchases WHERE listing ='" + userpurchase[0].listing + "'",
+        function(err, result) {
+          if (result.length > 0) {
+            var usersniped = (JSON.parse(JSON.stringify(result)))[0].user;
+            client.emit('snipeconfirmerror', "This listing has already been logged as sniped by " + usersniped + "!");
+          } else {
+            pool.query("INSERT INTO UserPurchases (user, skin, wear, pattern, tier, listprice, listing, inspect, sniper, date) VALUES ('" + userpurchase[0].user  + "', '" + userpurchase[0].skin + "', '" + userpurchase[0].wear + "', '" + userpurchase[0].pattern + "', '" + userpurchase[0].tier + "', '" + userpurchase[0].listprice + "', '" + userpurchase[0].listing +
+            "', '" + userpurchase[0].inspect + "', 'OP', NOW() )",
+            function(err, result) {
+              if (err) throw err;
+              console.log("Inserted " + buydata.user + "'s Snipe into Purchase Database");
+              io.emit('confirmedsnipe', buydata.user + " Sniped a " + userpurchase[0].skin + "!");
+            });
+          }
+        });
+      }
+    });
+  });
+
+  client.on('requestpurchases', function(data) {
+    pool.query("SELECT * FROM UserPurchases",
+    function(err, result) {
+      if (err) throw err;
+      var purchasedata = JSON.parse(JSON.stringify(result));
+      client.emit('AllPurchases', purchasedata);
+    });
+  });
+
+  client.on('Calc', function(data) {
+    pool.query("SELECT * FROM UserPurchases",
+    function(err, result) {
+      if (err) throw err;
+      pupdated = JSON.parse(JSON.stringify(result));
+      var puplength = pupdated.length;
+      var tprofit = 0, tcost = 0, tsales = 0, tunsold = 0, tcapital = 0;
+      var sprofit = 0, scost = 0, ssales = 0, sunsold = 0, scapital = 0;
+      var dprofit = 0, dcost = 0, dsales = 0, dunsold = 0, dcapital = 0;
+      var nprofit = 0, ncost = 0, nsales = 0, nunsold = 0, ncapital = 0;
+      var Total, SalesTotal, DogeTotal, NawtyTotal, CalcTotal;
+      for (var x = 0; x < puplength; x++) {
+         var cost = parseFloat((pupdated[x].listprice).replace('$', ''));
+         tcost = tcost + cost;
+         if (pupdated[x].user === 'Doge') {
+           dcost = dcost + cost;
+         }
+         if (pupdated[x].user === 'Nawty') {
+           ncost = ncost + cost;
+         }
+    //     tsales = cost -       unsold
+         if (Boolean(pupdated[x].sellprice) === true) {
+           var profit = parseFloat((pupdated[x].profit).replace('$', ''));
+           var sales = parseFloat((pupdated[x].sellprice).replace('$', ''));
+           var cost = parseFloat((pupdated[x].listprice).replace('$', ''));
+           if (profit === NaN) {
+             profit = 0;
+           }
+           if (sales === NaN) {
+             sales = 0;
+           }
+           if (cost === NaN) {
+             cost = 0;
+           }
+           scost = scost + cost;
+           ssales = ssales + sales;
+           tsales = tsales + sales;
+         }
+         if (Boolean(pupdated[x].profit) === true) {
+           var profit = parseFloat((pupdated[x].profit).replace('$', ''));
+           sprofit = sprofit + profit;
+         }
+         if (Boolean(pupdated[x].sellprice) === false) {
+           var unsold = parseFloat((pupdated[x].listprice).replace('$', ''));
+           tunsold = tunsold + unsold;
+         }
+         if (Boolean(pupdated[x].sellprice) === true && pupdated[x].user === 'Doge') {
+           var sales = parseFloat((pupdated[x].sellprice).replace('$', ''));
+           dsales = dsales + sales;
+         }
+         if (Boolean(pupdated[x].profit) === true && pupdated[x].user === 'Doge') {
+           var profit = parseFloat((pupdated[x].profit).replace('$', ''));
+           dprofit = dprofit + profit;
+         }
+         if (Boolean(pupdated[x].sellprice) === false && pupdated[x].user === 'Doge') {
+           var unsold = parseFloat((pupdated[x].listprice).replace('$', ''));
+           dunsold = dunsold + unsold;
+         }
+         if (Boolean(pupdated[x].sellprice) === true && pupdated[x].user === 'Nawty') {
+           var sales = parseFloat((pupdated[x].sellprice).replace('$', ''));
+           nsales = nsales + sales;
+         }
+         if (Boolean(pupdated[x].profit) === true && pupdated[x].user === 'Nawty') {
+           var profit = parseFloat((pupdated[x].profit).replace('$', ''));
+           nprofit = nprofit + profit;
+         }
+         if (Boolean(pupdated[x].sellprice) === false && pupdated[x].user === 'Nawty') {
+           var unsold = parseFloat((pupdated[x].listprice).replace('$', ''));
+           nunsold = nunsold + unsold;
+         }
+         if (x === puplength - 1) {
+           tprofit = dprofit + nprofit;
+           Total = new Totals(tcost.toFixed(2), tsales.toFixed(2), tprofit.toFixed(2), tunsold.toFixed(2));
+           SalesTotal = new Totals(scost.toFixed(2), ssales.toFixed(2), sprofit.toFixed(2), tunsold.toFixed(2));
+           DogeTotal = new Totals(dcost.toFixed(2), dsales.toFixed(2), dprofit.toFixed(2), dunsold.toFixed(2));
+           NawtyTotal = new Totals(ncost.toFixed(2), nsales.toFixed(2), nprofit.toFixed(2), nunsold.toFixed(2));
+           CalcTotal = new Calculations(Total, SalesTotal, DogeTotal, NawtyTotal);
+           console.log(CalcTotal);
+           client.emit('Calculations', CalcTotal)
+         }
+      }
+    });
+  });
+
+  client.on('salelog', function(data) {
+    console.log(data);
+    pool.query("SELECT * FROM UserPurchases WHERE listing = '" + data.snipelink + "'",
+    function(err, result) {
+      if (err) throw err;
+        var snipedata = JSON.parse(JSON.stringify(result));
+        var snipedatalength = snipedata.length
+        var user = snipedata[0].user;
+        var buyprice = parseFloat((snipedata[0].listprice).replace('$', ''));
+        var soldprice = parseFloat((data.saleprice).replace('$', ''));
+        var profit = soldprice - buyprice;
+        profit = profit.toFixed(2);
+        var snipelink = data.snipelink;
+        var salelink = data.salelink;
+        var ProfitData = new ProfitConstructor(user, buyprice, soldprice, profit, snipelink, salelink);
+        pool.query("UPDATE UserPurchases SET sellprice = '" + data.saleprice + "', salelink = '" + data.salelink + "' WHERE listing = '" + data.snipelink + "'",
+        function(err, result) {
+          if (err) throw err;
+          pool.query("UPDATE UserPurchases SET profit = '$" +  profit + "' WHERE listing = '" + data.snipelink + "'",
+          function(err, result) {
+            if (err) throw err;
+            io.emit('saleupdated', ProfitData);
+          });
+        });
+    });
+  });
+
+});
+
+function ProfitConstructor(user, buyprice, soldprice, profit, snipelink, salelink, profittotal) {
+  this.user = user;
+  this.buyprice = buyprice;
+  this.soldprice = soldprice;
+  this.profit = profit;
+  this.snipelink = snipelink;
+  this.salelink = salelink;
+}
+
+function Totals(cost, sales, profit, unsold, capital) {
+  this.cost = cost;
+  this.sales = sales;
+  this.profit = profit;
+  this.unsold = unsold;
+//  this.capital = capital;
+}
+
+function Calculations(total, salestotal, dogetotal, nawtytotal) {
+  this.Total = total;
+  this.SalesTotal = salestotal;
+  this.DogeTotal = dogetotal;
+  this.NawtyTotal = nawtytotal;
+}
+
+function purchaseData(user, skin, wear, pattern, tier, listprice, soldprice, profit, profittotal, snipelink, salelink, inspect, sniper, date) {
+
+}
+
+
+
+var oldidtrack;
+var newidtrack;
+var idlimit;
+var res;
+var set = 0;
+(function load() {
+  pool.query("SELECT * FROM PrimarySnipes ORDER BY id DESC LIMIT 1",
+  function(err, result) {
+    if (err) throw err;
+    res = JSON.parse(JSON.stringify(result));
+    if (set === 0) {
+      oldidtrack = res[0].id;
+      set = 1;
+    }
+      newidtrack = res[0].id;
+      idlimit = newidtrack - oldidtrack;
+      if (idlimit > 0) {
+        pool.query("SELECT * FROM PrimarySnipes ORDER BY id DESC LIMIT " + idlimit,
+        function(err, result) {
+          if (err) throw err;
+          var sendres = JSON.parse(JSON.stringify(result));
+          console.log(sendres);
+          oldidtrack = res[0].id;
+          io.emit('refresh', sendres);
+          setTimeout(function() {
+            load()
+          }, 1000);
+        });
+      } else {
+        setTimeout(function() {
+          load()
+        }, 1000);
+      }
+  });
+})();
+
+function SniperTest() {
+  console.log(sniper.snipetest());
+  setTimeout(function() {
+    SniperTest();
+  }, 500);
+}
+SniperTest();

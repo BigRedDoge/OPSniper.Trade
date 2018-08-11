@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>OPSkins Sniper</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"></script>
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="https://code.jquery.com/jquery.js"></script>
+  <script src="javascripts/main.js"></script>
+  <link rel="stylesheet" type="text/css" href="stylesheets/style.css"></script>
+  <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
+  <link rel="icon" href="/favicon.ico" type="image/x-icon">
+</head>
+<body>
+<nav class="navbar navbar-inverse">
+    <div class="container-fluid">
+      <div class="navbar-header">
+        <a class="navbar-brand" href="#">
+          <img src="images/opsniperlogo.png" class="d-inline-block align-top" alt="" id="logo">
+          OPSniper
+        </a>
+      </div>
+      <ul class="nav navbar-nav">
+        <li class="active"><a href="/">Home</a></li>
+        <li><a href="/purchases">Purchases</a></li>
+        <li><a href="#">Info</a></li>
+        <li><a href="#">Idk this is just here because it looks professional lol</a></li>
+      </ul>
+      <ul class="navbar navbar-nav navbar-right">
+        <div class="usersonline">
+          <p class="navbar-text">Users Online: </p>
+        </div>
+      </ul>
+    </div>
+  </nav>
+<div class="container">
+  <div class="row" id="header">
+    <div class="col-sm-8">
+      <h2>Item Listings</h2>
+      <div>
+        <label class="radio-inline">
+          <input id="dogebuy "type="radio" name="optradio" onclick="dogeSelect()">Doge
+        </label>
+        <label class="radio-inline">
+          <input id="nawtybuy" type="radio" name="optradio" onclick="nawtySelect()">Nawty
+        </label>
+      </div>
+    </div>
+    <div class="col-sm-4">
+      <div id="useralert">
+      </div>
+    </div>
+  </div>
+  <table class="table table-bordered">
+    <thead>
+      <tr>
+        <th>Skin</th>
+        <th>Float</th>
+        <th>Pattern</th>
+        <th>Tier</th>
+        <th>Price listed</th>
+        <th>Suggested Price</th>
+        <th>Date/Time</th>
+        <th>Metjm Link</th>
+        <th>OPS Link</th>
+        <th>Confirm Purchase</th>
+      </tr>
+    </thead>
+    <tbody class='table' id='dataTable'>
+    </tbody>
+  </table>
+</div>
+
+<div class="container">
+<p>Page #</p>
+<p class="text-center"><ul class="pagination pagination">
+  <li><a href="#">1</a></li>
+  <li><a href="#">2</a></li>
+  <li><a href="#">3</a></li>
+  <li><a href="#">4</a></li>
+  <li><a href="#">5</a></li>
+</ul></p>
+<div>
+
+<div class="container">
+  <a href="#" data-toggle="tooltip" title="ur gay!">hello doge boi</a>
+</div>
+
+</body>
+</html>

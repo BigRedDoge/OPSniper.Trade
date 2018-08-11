@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>OPSkins Sniper</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="http://code.jquery.com/jquery.js"></script>
+  <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
+  <link rel="icon" href="/favicon.ico" type="image/x-icon">
+</head>
+<body>
+  <nav class="navbar navbar-inverse">
+      <div class="container-fluid">
+        <div class="navbar-header">
+          <a class="navbar-brand" href="#">
+            <img src="images/opsniperlogo.png" class="d-inline-block align-top" alt="" id="logo">
+            OPSniper
+          </a>
+        </div>
+
+        <ul class="nav navbar-nav">
+          <li class="active"><a href="/">Home</a></li>
+          <li><a href="/purchases">Purchases</a></li>
+          <li><a href="#">Info</a></li>
+        </ul>
+
+        <ul class="navbar navbar-nav navbar-right">
+          <div class="usersonline">
+            <p class="navbar-text">Users Online: 2</p>
+          </div>
+        </ul>
+
+      </div>
+    </nav>
+
+  <div class="container">
+      <table class="grid" cellspacing="0">
+      <tbody>
+          <tr>
+              <td style="font-weight:bold">Skin</td>
+              <td style="font-weight:bold">Float</td>
+              <td style="font-weight:bold">Pattern</td>
+              <td style="font-weight:bold">Tier</td>
+              <td style="font-weight:bold">Price Sold</td>
+              <td style="font-weight:bold">Date/Time</td>
+              <td style="font-weight:bold">More Info</td>
+          </tr>
+        <tr>
+          <td>★ Flip Knife | Case Hardened</td>
+          <td>0.09598051756620</td>
+          <td>969</td>
+          <td>Tier 2</td>
+          <td>$109.99</td>
+          <td>2018-03-08 21:23:20</td>
+          <td>
+              <div class="dropdown">
+                <span>More Info</span>
+                <div class="dropdown-content">
+                  <p>★ Flip Knife | Case Hardened</p>
+                  <p>0.09598051756620</p>
+                  <p>969</p>
+                  <p>Tier 2</p>
+                  <p>$109.99</p>
+                  <p>2018-03-08 21:23:20</p>
+                </div>
+              </div>
+        </td>
+        </tr>
+
+      </tbody>
+      </table>
+  </div>
+
+  <div class="position">
+      <table align="center" class="grid" cellspacing="0">
+        <tbody>
+          <tr>
+            <td style="font-weight:bold" colspan="4">Simple Tracker</td>
+          </tr>
+          <tr>
+            <td>Spent</td>
+            <td>Sold</td>
+          </tr>
+          <tr>
+            <td>$</td>
+            <td>$</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <br>
+
+      <table align="center" class="grid" cellspacing="0">
+        <tbody>
+          <tr>
+            <td style="font-weight:bold" colspan="4">Capital Tracker</td>
+          </tr>
+          <tr>
+            <td>Spent</td>
+            <td>Sold</td>
+          </tr>
+          <tr>
+            <td>$</td>
+            <td>$</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <br>
+
+      <table align="center" class="grid" cellspacing="0">
+        <tbody>
+          <tr>
+            <td style="font-weight:bold" colspan="4">Nawty's Purchases/Sales</td>
+          </tr>
+          <tr>
+            <td>Spent</td>
+            <td>Sold</td>
+          </tr>
+          <tr>
+            <td>$</td>
+            <td>$</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <br>
+
+      <table align="center" class="grid" cellspacing="0">
+        <tbody>
+          <tr>
+            <td style="font-weight:bold" colspan="4">Doge's Purchases/Sales</td>
+          </tr>
+          <tr>
+            <td>Spent</td>
+            <td>Sold</td>
+          </tr>
+          <tr>
+            <td>$</td>
+            <td>$</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <br>
+
+      <table align="center" class="grid" cellspacing="0">
+        <tbody>
+          <tr>
+            <td style="font-weight:bold" colspan="4">100k Progress</td>
+          </tr>
+          <tr>
+            <td colspan="4">(add a fancy progress bar here)</td>
+          </tr>
+        </tbody>
+      </table>
+  </div>
+
+  <div class="container">
+  <p>Page #</p>
+  <p class="text-center"></p><ul class="pagination pagination">
+    <li><a href="#">1</a></li>
+    <li><a href="#">2</a></li>
+    <li><a href="#">3</a></li>
+    <li><a href="#">4</a></li>
+    <li><a href="#">5</a></li>
+  </ul><p></p>
+
+  </div>
+</body>
+</html>

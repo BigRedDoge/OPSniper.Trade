@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <title>OPSkins Sniper</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="javascripts/purchases.js"></script>
+  <script src="https://code.jquery.com/jquery.js"></script>
+  <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
+  <link rel="icon" href="/favicon.ico" type="image/x-icon">
+</head>
+  <style>
+    body {
+      background-color: #fff2e6;
+    }
+    .navbar {
+      background-color: #1a1a1a;
+    }
+    .table {
+      background-color: #ffe6cc;
+    }
+    div.card {
+      margin-bottom: 18px;
+      max-width: 18rem;
+      box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+    }
+    .card > h2 {
+      font-size: 20px;
+      text-align: center;
+    }
+    .card-header {
+      background-color: #ffbf80;
+      text-align: center;
+    }
+    .card-body {
+      background-color: #ffe5cc;
+    //  height: 150px;
+    //  display: inline-block;
+    }
+    table > thead > tr > th {
+      background-color: #ffbf80;
+    }
+    table > tbody > tr > td {
+      font-size: 14px;
+    }
+    #table {
+      height: 82vh;
+      overflow-y: scroll;
+      margin-left: 8px;
+      box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+      border-radius: 10px;
+      margin-bottom: 18px;
+    }
+    #tabler {
+    }
+
+    #topbar {
+      background-color: #ff9966;
+      padding: 10px;
+      border-color: #ff9966;
+    }
+    .card-body > p {
+      line-height: 0.5;
+    }
+    #useralert {
+      position: fixed;
+      display: none;
+      bottom: 5px;
+      left: 2%;
+      width: 96%;
+    //  height: 20px;
+    }
+    #alertmsg  {
+      text-align: center;
+      font-size: 24px;
+    }
+    #purchaseid {
+      max-width: 5rem;
+    }
+    #salelink {
+      max-width: 10rem;
+    }
+    #saleprice {
+      max-width: 6rem;
+    }
+  </style>
+  <body>
+    <nav class="navbar navbar-expand-sm navbar-dark py-0">
+        <a class="navbar-brand" href="#">
+          <img src="images/opsniperlogo.png" alt="" id="logo" style="width:30px;">
+          OPSniper
+        </a>
+        <ul class="navbar-nav">
+          <li class="nav-item">
+            <a class="nav-link" href="/">Home</a>
+          </li>
+          <li class="nav-item active">
+            <a class="nav-link" href="/purchases">Purchases</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#">Info</a>
+          </li>
+        </ul>
+        <span class="navbar-text id="usersonline"">
+          Users Online:
+        </span>
+    </nav>
+    <div class="container-fluid">
+      <div class="row mb-2" id="topbar">
+        <div class="col-md-3">
+        <div id="searchstyle">
+          <div class="input-group" id="searchbar">
+            <input type="text" class="form-control border border-dark" id="searchbarinput" placeholder="" aria-label="" aria-describedby="">
+            <div class="input-group-append">
+              <div class="btn-group">
+              <button class="btn btn-sm btn-light border border-dark" type="button" onclick="SearchTable()"> Search </button>
+              <button class="btn btn-sm btn-light border border-dark" type="button" onclick="ResetTable()"> Reset </button>
+            </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div id="searchstyle2">
+          <div class="input-group" id="submitpurchase">
+            <div class="input-group-prepend">
+              <select class="custom-select border border-dark" onchange="userSelect()" id="userselect">
+                <option selected> User... </option>
+                <option value="1"> Doge </option>
+                <option value="2"> Nawty </option>
+              </select>
+            </div>
+            <input type="text" class="forum-control border border-dark" id="purchaselink" placeholder="" aria-label="" aria-describedby="">
+              <div class="btn-group">
+                <button class="btn btn-sm btn-light border border-dark" type="button" onclick="logPurchase()"> Log Purchase </button>
+              </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-5">
+        <div id="salesubmitgroup">
+          <div class="input-group" id="submitsale">
+            <input type="text" class="forum control border border-dark rounded-left" id="purchaseid" placeholder="ID" aria-label="" aria-describedby="">
+            <input type="text" class="forum control border border-dark" id="salelink" placeholder="Sale Link" aria-label="" aria-describedby="">
+            <input type="text" class="forum control border border-dark" id="saleprice" placeholder="Sale Price" aria-label="" aria-describedby="">
+            <div class="input-group-append">
+              <button class="btn btn-light border border-dark" type="button" onclick="submitSale()"> Submit Sale </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+      <div class="row">
+        <div class="col-md-9">
+          <div id="table">
+            <table class="table table-hover table-bordered">
+              <thead>
+                <tr>
+                  <th> User </th>
+                  <th> Skin </th>
+                  <th id="wear" onclick="WearSort('lowtohigh')"> Wear </th>
+                  <th> Tier </th>
+                  <th id="cost" onclick="CostSort('hightolow')">Cost </th>
+                  <th id="sale" onclick="SaleSort('hightolow')"> Sale </th>
+                  <th id="profit" onclick="ProfitSort('hightolow')"> Profit </th>
+                  <th> Info </th>
+                </tr>
+              </thead>
+              <tbody id="purchasetable">
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card">
+            <div class="card-header">
+              <b>  Profit Calculations </b>
+            </div>
+            <div id="TotalCalc">
+              <div class="card-body">
+                <p class="card-text" id="totalpurchased"><b> Purchased: </b></p>
+                <p class="card-text" id="totalunsold"><b> Unsold Items Cost: </b></p>
+                <p class="card-text" id="totalsalecost"><b> Cost of Items on Sale: </b></p>
+                <p class="card-text" id="totalsold"><b> Total Amount Sold:  </b></p>
+                <p class="card-text" id="totalprofit"><b> Total Profit: </b></p>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <b>  Doge Calculations </b>
+            </div>
+            <div id="DogeCalc">
+              <div class="card-body">
+                <p class="card-text" id="dogepurchased"><b> Purchased: </b></p>
+                <p class="card-text" id="dogeonsale"><b> Items On Sale:  </b></p>
+                <p class="card-text" id="dogesales"><b> Sales:  </b></p>
+                <p class="card-text" id="dogeprofit"><b>  Profit:  </b></p>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <b>  Nawty Calculations </b>
+            </div>
+            <div id="NawtyCalc">
+              <div class="card-body">
+                <p class="card-text" id="nawtypurchased"><b>  Purchased: </b></p>
+                <p class="card-text" id="nawtyonsale"><b>  Items On Sale:  </b></p>
+                <p class="card-text" id="nawtysales"><b>  Sales:  </b></p>
+                <p class="card-text" id="nawtyprofit"><b>  Profit:  </b></p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id="useralert">
+        <div class="alert alert-danger" id="alertmsg" role="alert">
+
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
